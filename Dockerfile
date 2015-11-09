@@ -10,8 +10,6 @@ ENV HOME /root
 RUN rm -f /etc/service/sshd/down
 RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
 
-CMD ["/sbin/my_init"]
-
 # Add VN repo
 ADD sources.list /etc/apt/sources.list
 ADD sysctl.conf /etc/sysctl.conf
@@ -25,30 +23,34 @@ RUN add-apt-repository -y ppa:ondrej/php5-5.6 && \
 # RUN add-apt-repository -y ppa:git-core/ppa
 apt-get update && \
 apt-get install -y --force-yes curl wget build-essential python-software-properties \
-nginx php5-cli php5-fpm php5-mysql php5-pgsql php5-sqlite php5-curl \
-php5-imagick php5-mcrypt php5-intl php5-imap php5-tidy php5-mongo php5-redis && \
-# Optimize PHP
-sed -i "s/;date.timezone =.*/date.timezone = UTC/" /etc/php5/fpm/php.ini && \
-sed -i "s/;date.timezone =.*/date.timezone = UTC/" /etc/php5/cli/php.ini && \
-echo "daemon off;" >> /etc/nginx/nginx.conf && \
-sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php5/fpm/php-fpm.conf && \
-sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" $INI_FILE && \
-sed -i -e "s/upload_max_filesize\s*=\s*2M/upload_max_filesize = 256M/g" $INI_FILE && \
-sed -i -e "s/post_max_size\s*=\s*8M/post_max_size = 256M/g" $INI_FILE
+nginx supervisor php5-cli php5-fpm php5-mysql php5-pgsql php5-sqlite php5-curl \
+php5-gd php5-mcrypt php5-intl php5-imap php5-tidy php5-mongo php5-redis
+
+RUN rm -fr /etc/php5/fpm/pool.d/www.conf
+
+# Add config
+ADD ./php-conf/php.ini /etc/php5/cli/php.ini
+ADD ./php-conf/php.ini /etc/php5/fpm/php.ini
+ADD ./php-conf/php-fpm.conf /etc/php5/fpm/php-fpm.conf
+ADD ./php-conf/pool.d /etc/php5/fpm/pool.d
+ADD ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 RUN mkdir -p        /var/www && \
-	mkdir           /etc/service/nginx && \
-	mkdir           /etc/service/phpfpm
+	mkdir -p        /etc/service/supervisord
 
 ADD build/default   /etc/nginx/sites-available/default
 ADD nginx.conf		/etc/nginx/nginx.conf
-ADD build/nginx.sh  /etc/service/nginx/run
-ADD build/phpfpm.sh /etc/service/phpfpm/run
+ADD build/supervisor.sh  /etc/service/supervisord/run
 
-RUN chmod +x 		/etc/service/phpfpm/run && \
-	chmod +x        /etc/service/nginx/run
+RUN chmod +x 		/etc/service/supervisord/run
 
 EXPOSE 80
 # End Nginx-PHP
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+ADD init.sh /sbin/init.sh
+RUN chmod +x /sbin/init.sh
+ENV TERM xterm
+
+CMD ["/sbin/init.sh"]
