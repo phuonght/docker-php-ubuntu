@@ -35,8 +35,9 @@ ADD ./php-conf/php-fpm.conf /etc/php5/fpm/php-fpm.conf
 ADD ./php-conf/pool.d /etc/php5/fpm/pool.d
 ADD ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-RUN mkdir -p        /var/www && \
-	mkdir -p        /etc/service/supervisord && \
+ADD www /var/www
+
+RUN mkdir -p        /etc/service/supervisord && \
 	mkdir -p 		/etc/service/php-fpm && \
 	mkdir -p 		/etc/service/nginx
 
