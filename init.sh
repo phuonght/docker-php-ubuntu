@@ -7,8 +7,11 @@ if [ -d /var/www/cron.d ]; then
 fi
 
 if [ -d /var/www/supervisor.d ]; then
+    echo "Copy supervisor config files..."
     cp /var/www/supervisor.d/* /etc/supervisor/conf.d/
     chown -R root:root /etc/supervisor/conf.d/
+else 
+    echo "No such supervisor config file."
 fi
 
 if [ -d /var/www/storage ]; then

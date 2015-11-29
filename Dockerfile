@@ -37,19 +37,13 @@ ADD ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 ADD www /var/www
 
-RUN mkdir -p        /etc/service/supervisord && \
-	mkdir -p 		/etc/service/php-fpm && \
-	mkdir -p 		/etc/service/nginx
+RUN mkdir -p        /etc/service/supervisord
 
 ADD build/default   /etc/nginx/sites-available/default
 ADD nginx.conf		/etc/nginx/nginx.conf
 ADD build/supervisor.sh  /etc/service/supervisord/run
-ADD build/nginx.sh 	/etc/service/nginx/run
-ADD build/phpfpm.sh /etc/service/php-fpm/run
 
-RUN chmod +x 		/etc/service/supervisord/run \
-					/etc/service/nginx/run \
-					/etc/service/php-fpm/run
+RUN chmod +x 		/etc/service/supervisord/run
 
 EXPOSE 80
 # End Nginx-PHP
